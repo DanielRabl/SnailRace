@@ -431,22 +431,26 @@ struct race_distance {
 		this->goal = goal;
 	}
 	void init() {
-		this->line.set_color(qpl::rgb(200, 200, 200));
 		this->start_line.set_color(qpl::rgb(50, 150, 50));
 		this->finish_line.set_color(qpl::rgb(150, 50, 50));
 
 		this->tile_map.set_texture(qsf::get_texture("grass"), 32);
 	}
-	void set_invisible() {
-		this->line.set_multiplied_alpha(0);
-		this->start_line.set_multiplied_alpha(0);
-		this->finish_line.set_multiplied_alpha(0);
+	void apply_animation() {
+		auto p = this->animation.get_curve_progress();
+		auto a = qpl::u8_cast(p * 255);
+
+		this->start_line.set_multiplied_alpha(a);
+		this->finish_line.set_multiplied_alpha(a);
 		for (auto& i : this->seperations) {
-			i.set_multiplied_alpha(0);
+			i.set_multiplied_alpha(a);
 		}
 		for (auto& i : this->tile_map.vertices) {
-			i.color = qpl::rgb::white.with_alpha(0);
+			i.color = qpl::rgb::white.with_alpha(a);
 		}
+	}
+	void reset() {
+		this->animation.reset();
 	}
 	void set_dimension(qpl::vector2f dimension) {
 
@@ -458,8 +462,6 @@ struct race_distance {
 		pos.y += this->slug_count * 150 - 50;
 
 		auto dim = qpl::vec(this->goal * 10'000 + slug_width, 5);
-		this->line.set_position(pos);
-		this->line.set_dimension(dim);
 
 		auto line_height = this->slug_count * 150;
 		constexpr auto line_width = 5;
@@ -478,11 +480,15 @@ struct race_distance {
 
 		this->tile_map.position = pos - qpl::vec(0, line_height);
 		this->tile_map.scale = qpl::vec(scale, scale);
+
 		this->tile_map.create(0u, qpl::vec(dim.x, line_height));
 	}
 
 	void fade_in() {
 		this->animation.reset_and_start();
+	}
+	bool finished_fading_in() const {
+		return this->animation.just_finished_no_reverse();
 	}
 	void fade_out() {
 		this->animation.reset_and_start_reverse();
@@ -491,30 +497,17 @@ struct race_distance {
 	void update(const qsf::event_info& event) {
 		this->animation.update();
 		if (this->animation.is_running()) {
-			auto p = this->animation.get_curve_progress();
-			auto a = qpl::u8_cast(p * 255);
-
-			this->line.set_multiplied_alpha(a);
-			this->start_line.set_multiplied_alpha(a);
-			this->finish_line.set_multiplied_alpha(a);
-			for (auto& i : this->seperations) {
-				i.set_multiplied_alpha(a);
-			}
-			for (auto& i : this->tile_map.vertices) {
-				i.color = qpl::rgb::white.with_alpha(a);
-			}
+			this->apply_animation();
 		}
 	}
 
 	void draw(qsf::draw_object& draw) const {
 		draw.draw(this->tile_map);
-		draw.draw(this->line);
 		draw.draw(this->start_line);
 		draw.draw(this->finish_line);
 	}
 
 	std::vector<qsf::rectangle> seperations;
-	qsf::rectangle line;
 	qsf::rectangle start_line;
 	qsf::rectangle finish_line;
 	qpl::size slug_count = 0u;
@@ -544,8 +537,6 @@ struct game_state : qsf::base_state {
 		this->race_distance.init();
 		this->race_distance.create(this->slugs.size(), 40.0 / 1000);
 
-		this->call_on_resize();
-
 		this->start_button.set_text_font("gidugu");
 		this->start_button.set_text_character_size(50);
 		this->start_button.set_text_string("SETZE WETTE");
@@ -570,6 +561,7 @@ struct game_state : qsf::base_state {
 		this->start_button.set_position(this->dimension() - dim - qpl::vec(30, 30));
 		this->start_button.centerize_text();
 		this->race_distance.set_dimension(this->dimension());
+		this->race_distance.apply_animation();
 	}
 	void call_on_activate() override {
 		this->race_info.start_animation();
@@ -582,8 +574,12 @@ struct game_state : qsf::base_state {
 			i.reset();
 		}
 		this->slug_interface.set_positions(this->dimension());
-		this->race_distance.set_invisible();
+		this->race_distance.reset();
+		this->race_distance.apply_animation();
 		this->racing = false;
+		this->clicked_start = false;
+
+		this->call_on_resize();
 	}
 	void updating() override {
 		this->update(this->race_info);
@@ -594,11 +590,9 @@ struct game_state : qsf::base_state {
 
 		if (this->start_button_visible && this->start_button.is_clicked()) {
 			this->slug_interface.race_visible = true;
+			this->clicked_start = true;
 			this->slug_interface.fade_out();
 			this->start_button_animation.reset_and_start_reverse();
-		}
-		if (this->start_button_animation.just_finished_reverse()) {
-			this->racing = true;
 		}
 
 		this->start_button_animation.update();
@@ -607,9 +601,12 @@ struct game_state : qsf::base_state {
 			auto a = qpl::u8_cast(255 * p);
 			this->start_button.set_multiplied_alpha(a);
 		}
-		if (this->start_button_animation.just_finished_reverse()) {
+		if (this->start_button_animation.just_finished_reverse() && this->clicked_start) {
 			this->start_button_visible = false;
 			this->race_distance.fade_in();
+		}
+		if (this->race_distance.finished_fading_in()) {
+			this->racing = true;
 		}
 
 		if (this->slug_interface.slider_changed) {
@@ -666,6 +663,7 @@ struct game_state : qsf::base_state {
 	std::vector<slug_info> slugs; 
 	race_distance race_distance;
 	bool start_button_visible = false;
+	bool clicked_start = false;
 	bool racing = false;
 };
 
