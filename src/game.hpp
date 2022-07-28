@@ -26,21 +26,21 @@ struct game_state : qsf::base_state {
 
 		this->races = { 
 			::race{ {
-				{"Silly", "Gelbschnecke", 2.5, 3.5,     qpl::rgb(255, 200, 100) },
-				{"Sally", "Blauschnecke", 1.5, 4.5,     qpl::rgb(150, 150, 255) },
-				{"Killy", "Rotschnecke",  2.0, 4.0,     qpl::rgb(255, 100, 100) },
+				{"Silly", "Yellowsnail", 2.5, 3.5,     qpl::rgb(255, 200, 100) },
+				{"Sally", "Bluesnail", 1.5, 4.5,     qpl::rgb(150, 150, 255) },
+				{"Killy", "Redsnail",  2.0, 4.0,     qpl::rgb(255, 100, 100) },
 			}, 40.0 / 1000 },
 			::race{ {
-				{"Willy", "Cyanschnecke",  2.3, 3.7,    qpl::rgb(100, 255, 255) },
-				{"Olly", "Braunschnecke",  2.75, 3.25,  qpl::rgb(150, 70, 40)},
-				{"Tolly", "Grünschnecke",  1.5, 4.5,    qpl::rgb(50, 255, 50) },
+				{"Willy", "Cyansnail",  2.3, 3.7,    qpl::rgb(100, 255, 255) },
+				{"Olly", "Brownsnail",  2.75, 3.25,  qpl::rgb(150, 70, 40)},
+				{"Tolly", "Greensnail",  1.5, 4.5,    qpl::rgb(50, 255, 50) },
 			}, 50.0 / 1000 },
 			::race{ {
-				{"Qilly", "Grasschnecke",    2.4, 3.6,  qpl::rgb(180, 255, 0) },
-				{"Kolly", "Pinkschnecke",    2.8, 3.2,  qpl::rgb(255, 100, 255)},
-				{"Gilly", "Goldschnecke",    1.5, 4.5,  qpl::rgb(255, 255, 50) },
-				{"Nelly", "Lilaschnecke",    1.5, 4.5,  qpl::rgb(200, 100, 255) },
-				{"Rolly", "Silberschnecke",  2.9, 3.1,  qpl::rgb(200, 255, 255) },
+				{"Qilly", "Grassysnail",    2.4, 3.6,  qpl::rgb(180, 255, 0) },
+				{"Kolly", "Pinksnail",    2.8, 3.2,  qpl::rgb(255, 100, 255)},
+				{"Gilly", "Goldsnail",    1.5, 4.5,  qpl::rgb(255, 255, 50) },
+				{"Nelly", "Purplesnail",    1.5, 4.5,  qpl::rgb(200, 100, 255) },
+				{"Rolly", "Silversnail",  2.9, 3.1,  qpl::rgb(200, 255, 255) },
 			}, 60.0 / 1000 },
 		};
 
@@ -50,7 +50,8 @@ struct game_state : qsf::base_state {
 
 		this->graph.set_font("gidugu");
 		this->graph.enable_axis_info();
-		this->graph.background_color = qpl::rgb(20, 20, 20, 150);
+		this->graph.background_color = qpl::rgb(10, 10, 20);
+		this->graph.axis_thickness = 1.5;
 	}
 	void call_on_resize() override {
 		this->hud.set_dimension(this->dimension());
@@ -67,6 +68,7 @@ struct game_state : qsf::base_state {
 
 		this->graph.set_dimension(this->dimension() - 200);
 		this->graph.set_position(qpl::vec(100, 100));
+		this->graph.add_y_axis_line(3.0, qpl::rgb::red, 0.5);
 	}
 	void reset() {
 		this->racing = false;
@@ -77,6 +79,8 @@ struct game_state : qsf::base_state {
 	void call_on_activate() override {
 		this->current_race = 0u;
 		this->first_winner = qpl::size_max;
+		this->player.money = this->player.money_before = 50;
+		this->hud.set_info(this->player.money);
 
 		this->race = this->races[this->current_race];
 		this->snail_interface.create(this->race.snails, this->player, this->race.goal);
@@ -101,7 +105,7 @@ struct game_state : qsf::base_state {
 
 		this->hud.reset();
 
-		this->race_announcement.set_info("RENNEN #1");
+		this->race_announcement.set_info("RACE #1");
 		this->race_announcement.start_animation();
 		this->race_announcement.set_colors();
 
@@ -130,6 +134,9 @@ struct game_state : qsf::base_state {
 			this->clicked_start = true;
 			this->snail_interface.fade_out();
 			this->start_button.animation.reset_and_start_reverse();
+
+			this->hud.set_info(this->player.money);
+			this->hud.start_animation(qpl::rgb(255, 100, 100));
 		}
 		this->start_button.update_animation(this->event());
 		if (this->start_button.animation.just_finished_reverse() && this->clicked_start) {
@@ -183,12 +190,12 @@ struct game_state : qsf::base_state {
 					}
 					if (this->winners_count == this->race.snails.size()) {
 						if (this->first_winner == this->snail_interface.selected_snail) {
-							this->bet_feedback.set_text("Deine Wette hat gewonnen!");
+							this->bet_feedback.set_text("Your snail won!");
 							this->bet_feedback.set_color(qpl::rgb(100, 255, 100));
 							this->won = true;
 						}
 						else {
-							this->bet_feedback.set_text("Deine Wette hat verloren.");
+							this->bet_feedback.set_text("Your snail lost.");
 							this->bet_feedback.set_color(qpl::rgb(255, 100, 100));
 							this->won = false;
 						}
@@ -202,12 +209,16 @@ struct game_state : qsf::base_state {
 					}
 				}
 
-				qpl::f64 velocity = 0.0;
+				qpl::f64 velocity = 0;
+				if (qpl::find(this->graph.standard_graphs, this->race.snails[i].name)) {
+					velocity = this->graph.get_standard_graph(this->race.snails[i].name).data.back().data;
+				}
 				if (!this->race.snails[i].at_goal) {
 					if (this->graph.standard_graphs.find(this->race.snails[i].name) == this->graph.standard_graphs.cend()) {
 						this->graph.get_standard_graph(this->race.snails[i].name).color = this->race.snails[i].color;
 						this->graph.get_standard_graph(this->race.snails[i].name).thickness = 2.0;
 					}
+
 					velocity = this->race.snails[i].velocity;
 				}
 				velocities.push_back(velocity);
@@ -225,15 +236,17 @@ struct game_state : qsf::base_state {
 		if (this->bet_feedback.animation.just_finished_no_reverse()) {
 			if (this->won) {
 				auto money = this->snail_interface.selected_money;
-				auto win = money * this->snail_interface.bet_types.size();;
+
+				auto win = money * this->snail_interface.bet_types.size();
 				this->player.money += win;
 				this->player.money_before = this->player.money;
 
-				this->win_announcement.set_info(qpl::to_string("Gewonnen: +", win));
+				this->win_announcement.set_info(qpl::to_string("WON: +", win));
 				this->win_announcement.set_color(qpl::rgb(100, 255, 100));
 			}
 			else {
-				this->win_announcement.set_info(qpl::to_string("Verloren: -", this->snail_interface.selected_money));
+				this->player.money_before = this->player.money;
+				this->win_announcement.set_info(qpl::to_string("LOST: -", this->snail_interface.selected_money));
 				this->win_announcement.set_color(qpl::rgb(255, 100, 100));
 			}
 		}
@@ -271,16 +284,18 @@ struct game_state : qsf::base_state {
 		}
 
 		if (this->win_announcement.animation.just_finished_no_reverse()) {
-			this->hud.set_info(this->player.money);
-			this->hud.start_animation(this->win_announcement.text.get_color());
+			if (this->player.money != this->hud.amount) {
+				this->hud.set_info(this->player.money);
+				this->hud.start_animation(this->win_announcement.text.get_color());
+			}
 		}
 		if (this->win_announcement.animation_finished()) {
 			if (this->current_race < this->races.size()) {
-				this->race_announcement.set_info(qpl::to_string("RENNEN #", this->current_race + 1));
+				this->race_announcement.set_info(qpl::to_string("RACE #", this->current_race + 1));
 				this->race_announcement.start_animation();
 			}
 			else {
-				this->race_announcement.set_info(qpl::to_string("SPIEL-SCORE = ", this->player.money));
+				this->race_announcement.set_info(qpl::to_string("GAME-SCORE = ", this->player.money));
 				this->race_announcement.text_rectangle.set_outline_color(qpl::rgb::blue);
 				this->race_announcement.start_animation();
 			}
@@ -289,6 +304,7 @@ struct game_state : qsf::base_state {
 	void drawing() override {
 		this->draw(this->background);
 		this->draw(this->race_floor);
+
 		this->draw(this->race_announcement);
 		this->draw(this->win_announcement);
 		this->draw(this->snail_interface);
@@ -299,6 +315,7 @@ struct game_state : qsf::base_state {
 		if (this->graph_visible) {
 			this->draw(this->graph);
 		}
+
 
 		this->draw(this->transition);
 	}

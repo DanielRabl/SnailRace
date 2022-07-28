@@ -28,9 +28,9 @@ struct snail_info {
 
 	std::string string() const {
 		return qpl::to_string(
-			"Name    : ", this->name,
-			"\nRasse   : ", this->rasse,
-			"\nGeschw. : ", this->velocity1, " - ", this->velocity2, " m/h");
+			  "Name  : ", this->name,
+			"\nRace  : ", this->rasse,
+			"\nSpeed : ", this->velocity1, " - ", this->velocity2, " m/h");
 	}
 	void update(const qsf::event_info& event, double goal) {
 		auto f = event.frame_time_f();

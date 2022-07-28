@@ -66,6 +66,7 @@ struct snail_interface {
 			i.slider.set_range(0u, player.money, 0u);
 			i.snail_border.set_color(i.color.darkened(0.8));
 		}
+		this->animation.reset();
 		this->race_finished = false;
 	}
 
@@ -95,7 +96,7 @@ struct snail_interface {
 
 			this->bet_types[i].slider_text.set_font("gidugu");
 			this->bet_types[i].slider_text.set_character_size(50);
-			this->bet_types[i].slider_text.set_string("Einsatz: 0");
+			this->bet_types[i].slider_text.set_string("Bet: 0");
 
 
 			this->bet_types[i].description_text.set_font("anonymous");
@@ -242,7 +243,7 @@ struct snail_interface {
 				this->selected_money = this->bet_types[i].slider.get_value();
 				this->slider_changed = true;
 				this->selected_snail = i;
-				this->bet_types[i].slider_text.set_string(qpl::to_string("Einsatz: ", this->bet_types[i].slider.get_value()));
+				this->bet_types[i].slider_text.set_string(qpl::to_string("Bet: ", this->bet_types[i].slider.get_value()));
 				this->bet_types[i].leaf.set_center(this->bet_types[i].slider_text.get_visible_hitbox().middle_right().moved(this->leaf_shift, 0));
 				if (this->selected_money) {
 					this->bet_types[i].snail_border.set_color(this->bet_types[i].color.intensified(0.5).lighted(0.5));
@@ -257,7 +258,7 @@ struct snail_interface {
 			for (qpl::size i = 0u; i < this->bet_types.size(); ++i) {
 				if (i != index) {
 					this->bet_types[i].slider.set_value(0u);
-					this->bet_types[i].slider_text.set_string(qpl::to_string("Einsatz: 0"));
+					this->bet_types[i].slider_text.set_string(qpl::to_string("Bet: 0"));
 					this->bet_types[i].leaf.set_center(this->bet_types[i].slider_text.get_visible_hitbox().middle_right().moved(this->leaf_shift, 0));
 					this->bet_types[i].snail_border.set_color(this->bet_types[i].color.darkened(0.8));
 				}

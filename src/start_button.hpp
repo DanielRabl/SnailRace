@@ -7,7 +7,7 @@ struct start_button {
 	void init() {
 		this->button.set_text_font("gidugu");
 		this->button.set_text_character_size(50);
-		this->button.set_text_string("SETZE WETTE");
+		this->button.set_text_string("PLACE BET");
 		this->button.set_background_color(qpl::rgb(20, 20, 40, 150));
 		this->button.set_background_outline_thickness(2.0);
 		this->button.set_background_outline_color(qpl::rgb::white);

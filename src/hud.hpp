@@ -45,7 +45,8 @@ struct hud {
 	}
 
 	void set_info(qpl::size amount) {
-		this->text.set_string("Du hast ", amount);
+		this->amount = amount;
+		this->text.set_string("You have ", amount);
 		auto hitbox = this->text.get_visible_hitbox();
 		auto pos = hitbox.middle_right().moved(40, 0);
 		this->sprite.set_center(pos);
@@ -56,4 +57,5 @@ struct hud {
 	qsf::sprite sprite;
 	qpl::animation animation;
 	qpl::rgb interpolate_color;
+	qpl::size amount;
 };

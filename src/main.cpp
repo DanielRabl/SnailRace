@@ -8,7 +8,8 @@
 int main() try {
 
 	qsf::framework framework;
-	framework.set_title("Snail Race by Daniel Rabl");
+	framework.set_speed_factor(2);
+	framework.set_title("Snail Race");
 	framework.set_framerate_limit(60);
 	framework.add_font("gidugu", "resources/Gidugu-Regular.ttf");
 	framework.add_font("anonymous", "resources/AnonymousPro-Bold.ttf");

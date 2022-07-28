@@ -61,7 +61,7 @@ struct menu_state : qsf::base_state {
 	}
 
 	constexpr static auto names = std::array{
-		"SPIELEN", "BEENDEN"
+		"PLAY", "EXIT"
 	};
 	std::vector<qsf::smooth_button> buttons;
 	qsf::sprite background;
