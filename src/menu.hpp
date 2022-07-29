@@ -18,6 +18,8 @@ struct menu_state : qsf::base_state {
 		this->background.set_scale(1.5);
 		this->call_on_resize();
 
+		this->framework->set_icon("resources/logo.png");
+
 	}
 	void call_on_activate() override {
 		this->transition.make_appear();
