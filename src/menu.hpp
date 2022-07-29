@@ -1,10 +1,12 @@
 #pragma once
 
 #include <qpl/qpl.hpp>
+#include "game.hpp"
+#include "credits.hpp"
 
 struct menu_state : qsf::base_state {
 	void init() override {
-		this->buttons.resize(2u);
+		this->buttons.resize(3u);
 		for (qpl::size i = 0u; i < this->buttons.size(); ++i) {
 			this->buttons[i].set_text_font("gidugu");
 			this->buttons[i].set_text_character_size(60);
@@ -15,10 +17,12 @@ struct menu_state : qsf::base_state {
 		this->background.set_texture(this->get_texture("menu"));
 		this->background.set_scale(1.5);
 		this->call_on_resize();
+
 	}
 	void call_on_activate() override {
 		this->transition.make_appear();
 		this->lock = false;
+		this->push_game = false;
 	}
 	void call_on_resize() override {
 
@@ -42,14 +46,25 @@ struct menu_state : qsf::base_state {
 				if (button.get_text_string() == this->names[0]) {
 					this->transition.make_disappear();
 					this->lock = true;
+					this->push_game = true;
 				}
 				else if (button.get_text_string() == this->names[1]) {
+					this->transition.make_disappear();
+					this->lock = true;
+					this->push_game = false;
+				}
+				else if (button.get_text_string() == this->names[2]) {
 					this->close();
 				}
 			}
 		}
 		if (this->transition.just_finished_disappearing()) {
-			this->pop_this_state();
+			if (this->push_game) {
+				this->add_state<game_state>();
+			}
+			else {
+				this->add_state<credit_state>();
+			}
 		}
 
 
@@ -61,10 +76,11 @@ struct menu_state : qsf::base_state {
 	}
 
 	constexpr static auto names = std::array{
-		"PLAY", "EXIT"
+		"PLAY", "CREDITS", "EXIT"
 	};
 	std::vector<qsf::smooth_button> buttons;
 	qsf::sprite background;
 	qsf::transition_overlay transition;
 	bool lock = false;
+	bool push_game = false;
 };

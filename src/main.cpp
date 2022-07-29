@@ -3,7 +3,10 @@
 #include "menu.hpp"
 #include "game.hpp"
 
+#ifdef WIN32
 #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+#endif
+
 
 int main() try {
 
@@ -19,6 +22,7 @@ int main() try {
 	framework.add_texture("menu", "resources/menu.png");
 	framework.add_texture("game", "resources/game.png");
 	framework.add_texture("grass", "resources/grass.png");
+	framework.add_texture("shadow", "resources/shadow512.png");
 	framework.set_dimension({ 1400u, 950u });
 
 	framework.add_state<game_state>();

@@ -24,25 +24,58 @@ struct game_state : qsf::base_state {
 		this->background.set_texture(this->get_texture("game"));
 		this->bet_feedback.init();
 
-		this->races = { 
-			::race{ {
-				{"Silly", "Yellowsnail", 2.5, 3.5,     qpl::rgb(255, 200, 100) },
-				{"Sally", "Bluesnail", 1.5, 4.5,     qpl::rgb(150, 150, 255) },
-				{"Killy", "Redsnail",  2.0, 4.0,     qpl::rgb(255, 100, 100) },
-			}, 40.0 / 1000 },
-			::race{ {
-				{"Willy", "Cyansnail",  2.3, 3.7,    qpl::rgb(100, 255, 255) },
-				{"Olly", "Brownsnail",  2.75, 3.25,  qpl::rgb(150, 70, 40)},
-				{"Tolly", "Greensnail",  1.5, 4.5,    qpl::rgb(50, 255, 50) },
-			}, 50.0 / 1000 },
-			::race{ {
-				{"Qilly", "Grassysnail",    2.4, 3.6,  qpl::rgb(180, 255, 0) },
-				{"Kolly", "Pinksnail",    2.8, 3.2,  qpl::rgb(255, 100, 255)},
-				{"Gilly", "Goldsnail",    1.5, 4.5,  qpl::rgb(255, 255, 50) },
-				{"Nelly", "Purplesnail",    1.5, 4.5,  qpl::rgb(200, 100, 255) },
-				{"Rolly", "Silversnail",  2.9, 3.1,  qpl::rgb(200, 255, 255) },
-			}, 60.0 / 1000 },
-		};
+		auto race_string = qpl::filesys::read_file("resources/race.cfg");
+		auto lines = qpl::split_string(race_string, '\n');
+
+		bool empty = true;
+		::race temp_race;
+		for (auto& line : lines) {
+			if (line.length() && line.back() == '\r') {
+				line.pop_back();
+			}
+
+			if (line.empty()) {
+				continue;
+			}
+			else if (qpl::string_equals_ignore_case(line.substr(0u, 4u), "race")) {
+				if (!empty) {
+					this->races.push_back(temp_race);
+					temp_race.snails.clear();
+				}
+			}
+			else if (qpl::string_equals_ignore_case(line.substr(0u, 6u), "length")) {
+				auto split = qpl::split_string_numbers<qpl::u32>(line);
+				if (split.size() != 1) {
+					throw qpl::exception("error reading length info in \"race.cfg\": \"", line, "\" is invalid.");
+				}
+				temp_race.goal = split[0u] / 1000.0;
+			}
+			else {
+				auto split = qpl::split_string(line, ',');
+				if (split.size() != 6) {
+					throw qpl::exception("error reading snail info in \"race.cfg\": \"", line, "\" is invalid.");
+				}
+
+				
+				std::string name = qpl::string_remove_whitespace(split[0]);
+				std::string race = qpl::string_remove_whitespace(split[1]);
+				std::string velocity_string = split[2];
+				std::string color_string = "";
+				for (qpl::size i = 3u; i < 6u; ++i) {
+					color_string += split[i] + " ";
+				}
+
+				auto velocity_numbers = qpl::split_string_numbers<qpl::f64>(velocity_string);
+				auto color_numbers = qpl::split_string_numbers<qpl::u32>(color_string);
+				auto color = qpl::rgb(color_numbers[0], color_numbers[1], color_numbers[2]);
+
+				temp_race.snails.push_back(snail_info(name, race, velocity_numbers[0], velocity_numbers[1], color));
+				empty = false;
+			}
+		}
+		if (temp_race.snails.size()) {
+			this->races.push_back(temp_race);
+		}
 
 		this->race_floor.init();
 		this->start_button.init();
@@ -174,7 +207,8 @@ struct game_state : qsf::base_state {
 		}
 
 		if (this->transition.just_finished_disappearing()) {
-			this->add_state<menu_state>();
+			this->pop_this_state();
+			return;
 		}
 
 		if (this->racing) {
