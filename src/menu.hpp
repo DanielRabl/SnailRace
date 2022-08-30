@@ -10,7 +10,7 @@ struct menu_state : qsf::base_state {
 		for (qpl::size i = 0u; i < this->buttons.size(); ++i) {
 			this->buttons[i].set_text_font("gidugu");
 			this->buttons[i].set_text_character_size(60);
-			this->buttons[i].set_background_color(qpl::rgb(20, 20, 40, 150));
+			this->buttons[i].set_background_color(qpl::rgba(20, 20, 40, 150));
 			this->buttons[i].set_background_outline_thickness(2.0);
 			this->buttons[i].set_background_outline_color(qpl::rgb::white);
 		}

@@ -8,14 +8,14 @@ struct snail_info {
 	double velocity1;
 	double velocity2;
 	double velocity;
-	qpl::rgb color;
+	qpl::rgba color;
 	double progress = 0.0;
 	double start = 0.0;
 	bool at_goal = false;
 	bool just_reached_goal = false;
 	qpl::cubic_generator velocity_generator;
 
-	snail_info(std::string name, std::string rasse, double vel1, double vel2, qpl::rgb color) {
+	snail_info(std::string name, std::string rasse, double vel1, double vel2, qpl::rgba color) {
 		this->name = name;
 		this->rasse = rasse;
 		this->velocity1 = vel1;

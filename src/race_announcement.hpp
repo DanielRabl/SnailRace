@@ -13,7 +13,7 @@ struct race_announcement {
 	void set_colors() {
 		this->text.set_color(qpl::rgb(255, 150, 200));
 		this->text_rectangle.set_outline_color(qpl::rgb(255, 200, 230));
-		this->text_rectangle.set_color(qpl::rgb::transparent);
+		this->text_rectangle.set_color(qpl::rgba::transparent);
 	}
 	void init() {
 		this->text.set_font("gidugu");

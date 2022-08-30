@@ -13,7 +13,7 @@ struct bet_feedback {
 		this->text_background.set_color(qpl::rgb(40, 40, 40));
 		this->text_background.set_outline_color(qpl::rgb::grey_shade(220));
 
-		this->shadow.set_color(qpl::rgb(10, 10, 20, 200));
+		this->shadow.set_color(qpl::rgba(10, 10, 20, 200));
 	}
 
 	void make_position() {

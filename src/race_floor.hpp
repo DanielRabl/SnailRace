@@ -25,7 +25,7 @@ struct race_floor {
 			i.set_multiplied_alpha(a);
 		}
 		for (auto& i : this->tile_map.vertices) {
-			i.color = qpl::rgb::white.with_alpha(a);
+			i.color = qpl::rgba::white.with_alpha(a);
 		}
 	}
 	void reset() {

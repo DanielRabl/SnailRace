@@ -21,7 +21,7 @@ struct win_announcement {
 
 		this->animation.set_duration(1.0);
 
-		this->text_rectangle.set_color(qpl::rgb::transparent);
+		this->text_rectangle.set_color(qpl::rgba::transparent);
 		this->text_rectangle.set_outline_thickness(4.0f);
 		this->text_rectangle.set_slope_dimension(40);
 		this->text_rectangle.set_outline_color(qpl::rgb(200, 100, 100));
